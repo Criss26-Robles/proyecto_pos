@@ -1,0 +1,422 @@
+<div class="row g-4">
+
+  {{#if mensaje}}
+  <div class="col-12">
+    <div id="alertaMensaje" style="background: #1a3a2a; border: 1px solid #00ff88; color: #00ff88; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; display:flex; justify-content:space-between; align-items:center;">
+      <span>[OK] {{mensaje}}</span>
+      <button onclick="this.parentElement.remove()" style="background:none; border:none; color:#00ff88; cursor:pointer; font-size:18px;">X</button>
+    </div>
+  </div>
+  {{/if}}
+
+  {{#if error}}
+  <div class="col-12">
+    <div id="alertaError" style="background: #3a1a1a; border: 1px solid #ff4444; color: #ff4444; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; display:flex; justify-content:space-between; align-items:center;">
+      <span>[!] {{error}}</span>
+      <button onclick="this.parentElement.remove()" style="background:none; border:none; color:#ff4444; cursor:pointer; font-size:18px;">X</button>
+    </div>
+  </div>
+  {{/if}}
+
+  <div class="col-lg-8">
+    <div class="pos-card">
+      <div class="pos-card-body">
+        <div class="search-form mb-4">
+          <div class="search-wrapper">
+            <input type="text" id="inputBusqueda" class="search-input"
+              placeholder="Codigo de barras o nombre del producto..."
+              autocomplete="off" autofocus />
+          </div>
+          <small style="color:#666; margin-top:6px; display:block;">
+            Escribe un codigo de barras (numerico) o nombre y presiona Enter
+          </small>
+        </div>
+
+        <div id="resultadoBusqueda" style="display:none; margin-top:16px;">
+          <table class="pos-table">
+            <thead>
+              <tr>
+                <th>Codigo</th>
+                <th>Producto</th>
+                <th class="text-end">Precio</th>
+                <th class="text-center">Stock</th>
+                <th class="text-center">Accion</th>
+              </tr>
+            </thead>
+            <tbody id="tablaResultados"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="pos-card cart-card">
+      <div class="pos-card-header">
+        <div class="header-left"><span>Carrito</span></div>
+        {{#unless carritoVacio}}
+          <span class="badge-count">{{carrito.items.length}}</span>
+        {{/unless}}
+      </div>
+      <div class="pos-card-body">
+        {{#if carritoVacio}}
+          <div class="cart-empty">
+            <p>El carrito esta vacio</p>
+            <small>Agrega productos del catalogo</small>
+          </div>
+        {{else}}
+          <div class="cart-items">
+            {{#each carrito.items}}
+              <div class="cart-item">
+                <div class="cart-item-info">
+                  <span class="cart-item-name">{{this.nombreProducto}}</span>
+                  <span class="cart-item-price">$ {{this.precioUnitario}} c/u</span>
+                </div>
+                <div class="cart-item-controls">
+                  <form method="POST" action="/carrito/items/{{this.productoId}}/actualizar" class="qty-form">
+                    <button type="button" class="qty-btn qty-minus" data-form="qty-{{@index}}">-</button>
+                    <input id="qty-{{@index}}" type="number" name="cantidad" value="{{this.cantidad}}" min="1" class="qty-input" />
+                    <button type="button" class="qty-btn qty-plus" data-form="qty-{{@index}}">+</button>
+                    <button type="submit" class="qty-confirm">OK</button>
+                  </form>
+                  <div class="cart-item-subtotal">$ {{this.subtotal}}</div>
+                  <form method="POST" action="/carrito/items/{{this.productoId}}/eliminar" class="d-inline">
+                    <button type="submit" class="btn-remove">X</button>
+                  </form>
+                </div>
+              </div>
+            {{/each}}
+          </div>
+          <div class="cart-total">
+            <span class="cart-total-label">Total</span>
+            <span class="cart-total-amount" id="cartTotal">$ {{carrito.total}}</span>
+          </div>
+        {{/if}}
+        <div class="cart-actions">
+          <button onclick="abrirF4()" id="btn-confirmar-venta" class="btn-confirm" data-vacio="{{carritoVacio}}">
+            Confirmar Venta (F4)
+          </button>
+          {{#unless carritoVacio}}
+            <form method="POST" action="/carrito/vaciar">
+              <button type="submit" class="btn-clear">Vaciar carrito</button>
+            </form>
+          {{/unless}}
+        </div>
+        <div style="margin-top:16px; background:#0d0d1a; border-radius:8px; padding:12px;">
+          <div style="color:#555; font-size:11px; margin-bottom:8px; text-align:center; text-transform:uppercase; letter-spacing:1px;">Atajos de teclado</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px;">
+            <div style="color:#aaa; font-size:12px;"><span style="color:#00ff88;">F2</span> Metodo pago</div>
+            <div style="color:#aaa; font-size:12px;"><span style="color:#00ff88;">F4</span> Efectivo</div>
+            <div style="color:#aaa; font-size:12px;"><span style="color:#00ff88;">F3</span> Vaciar carrito</div>
+            <div style="color:#aaa; font-size:12px;"><span style="color:#00ff88;">F5</span> Buscar</div>
+            <div style="color:#aaa; font-size:12px;"><span style="color:#00ff88;">F6</span> Historial</div>
+            <div style="color:#aaa; font-size:12px;"><span style="color:#00ff88;">F7</span> Nuevo producto</div>
+            <div style="color:#aaa; font-size:12px;"><span style="color:#00ff88;">ESC</span> Cerrar modal</div>
+            <div style="color:#aaa; font-size:12px;"><span style="color:#00ff88;">Enter</span> Agregar</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal busqueda -->
+<div id="modalResultados" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center;">
+  <div style="background:#1a1a2e; border:1px solid #00ff88; border-radius:12px; padding:24px; width:500px; max-height:70vh; overflow-y:auto;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <h5 style="color:#00ff88; margin:0;">Resultados de busqueda</h5>
+      <button onclick="cerrarModal('modalResultados')" style="background:none; border:none; color:#aaa; font-size:24px; cursor:pointer;">X</button>
+    </div>
+    <div id="listaResultados"></div>
+  </div>
+</div>
+
+<!-- Modal F4 Efectivo -->
+<div id="modalEfectivo" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center;">
+  <div style="background:#1a1a2e; border:1px solid #00ff88; border-radius:12px; padding:32px; width:420px;">
+    <h4 style="color:#00ff88; margin-bottom:24px; text-align:center;">Cobro en Efectivo</h4>
+    <div style="background:#0d0d1a; border-radius:8px; padding:16px; margin-bottom:20px; text-align:center;">
+      <div style="color:#aaa; font-size:14px; margin-bottom:4px;">Total a pagar</div>
+      <div id="totalMostrar" style="color:#00ff88; font-size:32px; font-weight:bold;"></div>
+    </div>
+    <div style="margin-bottom:20px;">
+      <label style="color:#aaa; display:block; margin-bottom:8px;">Monto recibido</label>
+      <input type="number" id="montoRecibido" step="0.01" min="0"
+        style="width:100%; padding:12px; font-size:18px; border:1px solid #333; border-radius:8px; background:#0d0d1a; color:#fff; text-align:center;"
+        placeholder="0" />
+    </div>
+    <div id="cambioBox" style="display:none; background:#1a3a2a; border:1px solid #00ff88; border-radius:8px; padding:16px; margin-bottom:20px; text-align:center;">
+      <div style="color:#aaa; font-size:14px;">Cambio</div>
+      <div id="cambioMostrar" style="color:#00ff88; font-size:28px; font-weight:bold;"></div>
+    </div>
+    <div style="display:flex; gap:12px;">
+      <button onclick="cerrarModal('modalEfectivo')" style="flex:1; padding:12px; background:#333; border:none; border-radius:8px; color:#fff; cursor:pointer; font-size:16px;">Cancelar</button>
+      <button onclick="confirmarEfectivo()" style="flex:2; padding:12px; background:#00ff88; border:none; border-radius:8px; color:#000; cursor:pointer; font-size:16px; font-weight:bold;">Confirmar Venta</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal F2 Metodo de pago -->
+<div id="modalMetodoPago" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center;">
+  <div style="background:#1a1a2e; border:1px solid #00ff88; border-radius:12px; padding:32px; width:420px;">
+    <h4 style="color:#00ff88; margin-bottom:24px; text-align:center;">Metodo de Pago</h4>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px;">
+      <button onclick="seleccionarMetodo('Nequi')" class="btn-metodo">Nequi</button>
+      <button onclick="seleccionarMetodo('Davivienda')" class="btn-metodo">Davivienda</button>
+      <button onclick="seleccionarMetodo('Daviplata')" class="btn-metodo">Daviplata</button>
+      <button onclick="seleccionarMetodo('Transferencia')" class="btn-metodo">Transferencia</button>
+    </div>
+    <button onclick="cerrarModal('modalMetodoPago')" style="width:100%; padding:12px; background:#333; border:none; border-radius:8px; color:#fff; cursor:pointer; font-size:16px;">Cancelar</button>
+  </div>
+</div>
+
+<!-- Modal confirmacion -->
+<div id="modalConfirmacion" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1001; align-items:center; justify-content:center;">
+  <div style="background:#1a1a2e; border:1px solid #00ff88; border-radius:12px; padding:32px; width:380px; text-align:center;">
+    <div style="font-size:32px; margin-bottom:16px; color:#00ff88;">OK</div>
+    <h4 id="confirmacionTitulo" style="color:#00ff88; margin-bottom:8px;"></h4>
+    <p id="confirmacionDetalle" style="color:#aaa; margin-bottom:24px;"></p>
+    <div style="display:flex; gap:12px;">
+      <button onclick="cerrarModal('modalConfirmacion')" style="flex:1; padding:12px; background:#333; border:none; border-radius:8px; color:#fff; cursor:pointer;">Cancelar</button>
+      <button id="btnConfirmarFinal" style="flex:2; padding:12px; background:#00ff88; border:none; border-radius:8px; color:#000; cursor:pointer; font-weight:bold;">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.btn-metodo { padding:16px; background:#0d0d1a; border:1px solid #333; border-radius:8px; color:#fff; cursor:pointer; font-size:16px; transition:all 0.2s; }
+.btn-metodo:hover { border-color:#00ff88; color:#00ff88; }
+</style>
+
+<script>
+const inputBusqueda = document.getElementById('inputBusqueda');
+
+function cerrarModal(id) {
+    document.getElementById(id).style.display = 'none';
+    if (inputBusqueda) inputBusqueda.focus();
+}
+
+function abrirModal(id) {
+    document.getElementById(id).style.display = 'flex';
+}
+
+inputBusqueda.addEventListener('keypress', async function(e) {
+    if (e.key !== 'Enter') return;
+    const query = inputBusqueda.value.trim();
+    if (!query) return;
+    try {
+        const response = await fetch('/buscar?q=' + encodeURIComponent(query));
+        const productos = await response.json();
+        if (productos.length === 0) {
+            mostrarAlerta('No se encontraron productos para: ' + query, 'error');
+            document.getElementById('resultadoBusqueda').style.display = 'none';
+        } else if (productos.length === 1) {
+            agregarAlCarrito(productos[0]);
+            document.getElementById('resultadoBusqueda').style.display = 'none';
+        } else {
+            mostrarTablaResultados(productos);
+        }
+        inputBusqueda.value = '';
+    } catch (err) {
+        mostrarAlerta('Error al buscar productos', 'error');
+    }
+});
+
+function mostrarTablaResultados(productos) {
+    const tbody = document.getElementById('tablaResultados');
+    tbody.innerHTML = productos.map(function(p) {
+        return '<tr class="product-row" style="cursor:pointer;" onclick="agregarDesdeTabla(' + JSON.stringify(p.id) + ',' + JSON.stringify(p.nombre) + ',' + p.precio + ')">' +
+            '<td><span class="code-badge">' + p.codigo + '</span></td>' +
+            '<td class="product-name">' + p.nombre + '</td>' +
+            '<td class="text-end price-cell">$ ' + p.precio + '</td>' +
+            '<td class="text-center"><span class="stock-badge">' + p.stock + '</span></td>' +
+            '<td class="text-center"><button class="btn-add" onclick="event.stopPropagation(); agregarDesdeTabla(' + JSON.stringify(p.id) + ',' + JSON.stringify(p.nombre) + ',' + p.precio + ')">+</button></td>' +
+            '</tr>';
+    }).join('');
+    document.getElementById('resultadoBusqueda').style.display = 'block';
+}
+
+function agregarDesdeTabla(id, nombre, precio) {
+    fetch('/carrito/agregar-ajax', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productoId: id, nombre, precio, cantidad: 1 })
+    }).then(() => {
+        document.getElementById('resultadoBusqueda').style.display = 'none';
+        document.getElementById('inputBusqueda').value = '';
+        location.reload();
+    });
+}
+
+function mostrarModalResultados(productos) {
+    document.getElementById('listaResultados').innerHTML = productos.map(p =>
+        '<div onclick="seleccionarProducto(' + JSON.stringify(p.id) + ',' + JSON.stringify(p.nombre) + ',' + p.precio + ')" style="display:flex; justify-content:space-between; align-items:center; padding:14px; border-bottom:1px solid #333; cursor:pointer; border-radius:8px;" onmouseover="this.style.background=\'#0d0d2e\'" onmouseout="this.style.background=\'none\'">' +
+        '<div><div style="color:#fff; font-weight:600;">' + p.nombre + '</div><div style="color:#666; font-size:12px;">' + p.codigo + '</div></div>' +
+        '<div style="color:#00ff88; font-weight:bold;">$ ' + p.precio + '</div></div>'
+    ).join('');
+    abrirModal('modalResultados');
+}
+
+function seleccionarProducto(id, nombre, precio) {
+    cerrarModal('modalResultados');
+    fetch('/carrito/agregar-ajax', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productoId: id, nombre, precio, cantidad: 1 })
+    }).then(() => location.reload());
+}
+
+function agregarAlCarrito(producto) {
+    fetch('/carrito/agregar-ajax', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productoId: producto.id, nombre: producto.nombre, precio: producto.precio, cantidad: 1 })
+    }).then(() => location.reload());
+}
+
+function abrirF4() {
+    const vacio = document.getElementById('btn-confirmar-venta')?.dataset.vacio === 'true';
+    if (vacio) { mostrarAlerta('El carrito esta vacio', 'error'); return; }
+    const totalEl = document.getElementById('cartTotal');
+    const total = totalEl ? totalEl.textContent.replace('$','').trim() : '0';
+    document.getElementById('totalMostrar').textContent = '$ ' + total;
+    document.getElementById('montoRecibido').value = '';
+    document.getElementById('cambioBox').style.display = 'none';
+    abrirModal('modalEfectivo');
+    setTimeout(() => document.getElementById('montoRecibido').focus(), 100);
+}
+
+document.getElementById('montoRecibido')?.addEventListener('input', function() {
+    const totalEl = document.getElementById('cartTotal');
+    const total = parseFloat(totalEl.textContent.replace('$','').trim()) || 0;
+    const recibido = parseFloat(this.value) || 0;
+    const cambio = recibido - total;
+    const cambioBox = document.getElementById('cambioBox');
+    if (recibido > 0) {
+        cambioBox.style.display = 'block';
+        document.getElementById('cambioMostrar').textContent = '$ ' + cambio.toFixed(2);
+        cambioBox.style.borderColor = cambio >= 0 ? '#00ff88' : '#ff4444';
+        document.getElementById('cambioMostrar').style.color = cambio >= 0 ? '#00ff88' : '#ff4444';
+    } else {
+        cambioBox.style.display = 'none';
+    }
+});
+
+document.getElementById('montoRecibido')?.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        const cambioBox = document.getElementById('cambioBox');
+        if (cambioBox && cambioBox.style.display === 'block') { confirmarEfectivo(); }
+    }
+});
+
+function confirmarEfectivo() {
+    const totalEl = document.getElementById('cartTotal');
+    const total = parseFloat(totalEl.textContent.replace('$','').trim()) || 0;
+    const recibido = parseFloat(document.getElementById('montoRecibido').value) || 0;
+    if (recibido < total) { mostrarAlerta('Monto insuficiente', 'error'); return; }
+    const cambio = recibido - total;
+    cerrarModal('modalEfectivo');
+    mostrarConfirmacion(
+        'Confirmar Venta en Efectivo',
+        'Total: $ ' + total.toFixed(2) + ' | Cambio: $ ' + cambio.toFixed(2),
+        () => enviarVenta('efectivo')
+    );
+}
+
+function seleccionarMetodo(metodo) {
+    cerrarModal('modalMetodoPago');
+    mostrarConfirmacion(
+        'Confirmar Pago con ' + metodo,
+        'Se registrara la venta con ' + metodo,
+        () => enviarVenta(metodo)
+    );
+}
+
+function mostrarConfirmacion(titulo, detalle, onConfirmar) {
+    document.getElementById('confirmacionTitulo').textContent = titulo;
+    document.getElementById('confirmacionDetalle').textContent = detalle;
+    document.getElementById('btnConfirmarFinal').onclick = () => {
+        cerrarModal('modalConfirmacion');
+        onConfirmar();
+    };
+    abrirModal('modalConfirmacion');
+}
+
+function enviarVenta(metodoPago) {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/ventas';
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'metodoPago';
+    input.value = metodoPago;
+    form.appendChild(input);
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function mostrarAlerta(mensaje, tipo) {
+    const alerta = document.createElement('div');
+    alerta.style.cssText = 'position:fixed; top:20px; right:20px; padding:16px 24px; border-radius:8px; z-index:9999; font-weight:600;';
+    if (tipo === 'error') {
+        alerta.style.background = '#3a1a1a';
+        alerta.style.border = '1px solid #ff4444';
+        alerta.style.color = '#ff4444';
+        alerta.textContent = '[!] ' + mensaje;
+    } else {
+        alerta.style.background = '#1a3a2a';
+        alerta.style.border = '1px solid #00ff88';
+        alerta.style.color = '#00ff88';
+        alerta.textContent = '[OK] ' + mensaje;
+    }
+    document.body.appendChild(alerta);
+    setTimeout(() => alerta.remove(), 3000);
+}
+
+document.addEventListener('keypress', function(e) {
+    if (e.key !== 'Enter') return;
+    const modalConf = document.getElementById('modalConfirmacion');
+    if (modalConf && modalConf.style.display === 'flex') {
+        e.preventDefault();
+        document.getElementById('btnConfirmarFinal')?.click();
+    }
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'F4') { e.preventDefault(); abrirF4(); }
+    if (e.key === 'F2') {
+        e.preventDefault();
+        const vacio = document.getElementById('btn-confirmar-venta')?.dataset.vacio === 'true';
+        if (vacio) { mostrarAlerta('El carrito esta vacio', 'error'); return; }
+        abrirModal('modalMetodoPago');
+    }
+    if (e.key === 'F3') {
+        e.preventDefault();
+        const vacio = document.getElementById('btn-confirmar-venta')?.dataset.vacio === 'true';
+        if (vacio) { mostrarAlerta('El carrito esta vacio', 'error'); return; }
+        mostrarConfirmacion('Vaciar Carrito', 'Esta seguro que desea vaciar el carrito?', () => {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/carrito/vaciar';
+            document.body.appendChild(form);
+            form.submit();
+        });
+    }
+    if (e.key === 'F5') {
+        e.preventDefault();
+        inputBusqueda.focus();
+        inputBusqueda.select();
+        mostrarAlerta('Input listo para escanear', 'ok');
+    }
+    if (e.key === 'F6') { e.preventDefault(); window.location.href = '/historial'; }
+    if (e.key === 'F7') { e.preventDefault(); window.location.href = '/productos/crear'; }
+    if (e.key === 'Escape') {
+        e.preventDefault();
+        ['modalResultados','modalEfectivo','modalMetodoPago','modalConfirmacion'].forEach(id => {
+            document.getElementById(id).style.display = 'none';
+        });
+        inputBusqueda.focus();
+    }
+});
+</script>

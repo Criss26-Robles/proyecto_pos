@@ -1,0 +1,71 @@
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+
+    <div class="success-banner mb-4">
+      <span class="success-icon">✓</span>
+      <div>
+        <div class="success-title">Venta confirmada</div>
+        <div class="success-sub">La transacción fue registrada exitosamente</div>
+      </div>
+    </div>
+
+    <div class="pos-card">
+      <div class="pos-card-header">
+        <div class="header-left">
+          <span class="header-icon">◈</span>
+          <span>Comprobante</span>
+        </div>
+      </div>
+      <div class="pos-card-body">
+        <div class="venta-meta mb-4">
+          <div class="meta-item">
+            <span class="meta-label">ID de Venta</span>
+            <span class="code-badge">{{venta.id}}</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Fecha y Hora</span>
+            <span class="meta-value">{{venta.fechaHora}}</span>
+          </div>
+        </div>
+
+        <div class="section-title mb-3">Productos vendidos</div>
+        <table class="pos-table">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th class="text-center">Cantidad</th>
+              <th class="text-end">Precio Unit.</th>
+              <th class="text-end">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each venta.items}}
+            <tr class="product-row">
+              <td class="product-name">{{this.nombreProducto}}</td>
+              <td class="text-center">{{this.cantidad}}</td>
+              <td class="text-end text-secondary-pos">${{this.precioUnitario}}</td>
+              <td class="text-end price-cell">${{this.subtotal}}</td>
+            </tr>
+            {{/each}}
+          </tbody>
+          <tfoot>
+            <tr class="total-row">
+              <td colspan="3" class="text-end">Total</td>
+              <td class="text-end cart-total-amount">${{venta.total}}</td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <div class="cart-actions mt-4">
+          <a href="/" class="btn-confirm" style="text-decoration:none; display:inline-flex;">
+            ← Nueva Venta
+          </a>
+          <a href="/historial" class="btn-clear" style="text-decoration:none; display:inline-flex;">
+            Ver Historial
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

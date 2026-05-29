@@ -1,0 +1,43 @@
+<div class="row">
+  <div class="col-12">
+    <div class="pos-card">
+      <div class="pos-card-header">
+        <div class="header-left">
+          <span class="header-icon">◉</span>
+          <span>Historial de Ventas</span>
+        </div>
+      </div>
+      <div class="pos-card-body">
+        {{#if error}}
+          <div class="alert-pos alert-pos-danger">{{error}}</div>
+        {{/if}}
+        {{#if ventas.length}}
+          <table class="pos-table">
+            <thead>
+              <tr>
+                <th>ID Venta</th>
+                <th>Fecha</th>
+                <th>Total</th>
+                <th>Método Pago</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#each ventas}}
+                <tr>
+                  <td><span class="code-badge">{{this.id}}</span></td>
+                  <td>{{this.fecha}}</td>
+                  <td class="price-cell">${{this.total}}</td>
+                  <td>{{this.metodoPago}}</td>
+                </tr>
+              {{/each}}
+            </tbody>
+          </table>
+        {{else}}
+          <div class="cart-empty">
+            <p>No hay ventas registradas</p>
+          </div>
+        {{/if}}
+      </div>
+    </div>
+  </div>
+</div>

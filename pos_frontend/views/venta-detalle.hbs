@@ -1,0 +1,59 @@
+<div class="page-header mb-4">
+  <h2 class="page-title">
+    <span class="page-title-icon">🧾</span> Detalle de Venta
+  </h2>
+  <a href="/historial" class="btn-back">← Historial</a>
+</div>
+
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="pos-card">
+      <div class="pos-card-header">
+        <div class="header-left">
+          <span class="header-icon">◈</span>
+          <span>Información de la Venta</span>
+        </div>
+      </div>
+      <div class="pos-card-body">
+        <div class="venta-meta mb-4">
+          <div class="meta-item">
+            <span class="meta-label">ID de Venta</span>
+            <span class="code-badge">{{venta.id}}</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Fecha y Hora</span>
+            <span class="meta-value">{{venta.fechaHora}}</span>
+          </div>
+        </div>
+
+        <div class="section-title mb-3">Productos vendidos</div>
+        <table class="pos-table">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th class="text-center">Cantidad</th>
+              <th class="text-end">Precio Unit.</th>
+              <th class="text-end">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each venta.items}}
+            <tr class="product-row">
+              <td class="product-name">{{this.nombreProducto}}</td>
+              <td class="text-center">{{this.cantidad}}</td>
+              <td class="text-end text-secondary-pos">${{this.precioUnitario}}</td>
+              <td class="text-end price-cell">${{this.subtotal}}</td>
+            </tr>
+            {{/each}}
+          </tbody>
+          <tfoot>
+            <tr class="total-row">
+              <td colspan="3" class="text-end">Total de la venta</td>
+              <td class="text-end cart-total-amount">${{venta.total}}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
