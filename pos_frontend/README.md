@@ -49,7 +49,7 @@ npm install
 
 Crear archivo .env en la raiz del proyecto:
 
-`\nAPI_BASE_URL=https://zd536se6l8.execute-api.us-east-1.amazonaws.com/Prod
+`\nAPI_BASE_URL=https://rfs00jdfqb.execute-api.us-east-1.amazonaws.com/Prod
 PORT=3000
 `\n
 ### 3. Ejecutar el proyecto

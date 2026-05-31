@@ -7,7 +7,7 @@ const { engine } = require('express-handlebars');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const API_BASE = process.env.API_BASE_URL || 'https://zd536se6l8.execute-api.us-east-1.amazonaws.com/Prod';
+const API_BASE = process.env.API_BASE_URL || 'https://rfs00jdfqb.execute-api.us-east-1.amazonaws.com/Prod';
 
 const hbsHelpers = {
     lte: function(a, b) { return a <= b; },

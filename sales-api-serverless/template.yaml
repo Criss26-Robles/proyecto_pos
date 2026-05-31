@@ -1,0 +1,213 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Sistema POS - API Serverless con Lambda, API Gateway y DynamoDB
+
+Globals:
+  Function:
+    Timeout: 30
+    Runtime: nodejs20.x
+    Environment:
+      Variables:
+        PRODUCTOS_TABLE: !Ref ProductosTable
+        VENTAS_TABLE: !Ref VentasTable
+    Layers:
+      - !Ref DependenciasLayer
+
+Resources:
+
+  # ─── CAPA DE DEPENDENCIAS ───────────────────────────────────────────────────
+  DependenciasLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: pos-dependencias
+      Description: Dependencias compartidas (uuid)
+      ContentUri: layers/dependencias/
+      CompatibleRuntimes:
+        - nodejs20.x
+    Metadata:
+      BuildMethod: nodejs20.x
+
+  # ─── TABLAS DYNAMODB ────────────────────────────────────────────────────────
+  ProductosTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: pos-productos
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
+  VentasTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: pos-ventas
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
+  # ─── FUNCIONES LAMBDA ───────────────────────────────────────────────────────
+
+  # Productos
+  ListarProductosFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: pos-listar-productos
+      CodeUri: src/productos/
+      Handler: listar.handler
+      Description: Lista todos los productos o filtra por nombre/codigo
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ProductosTable
+      Events:
+        ListarProductos:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PosApi
+            Path: /productos
+            Method: GET
+
+  CrearProductoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: pos-crear-producto
+      CodeUri: src/productos/
+      Handler: crear.handler
+      Description: Crea un nuevo producto en el catalogo
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ProductosTable
+      Events:
+        CrearProducto:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PosApi
+            Path: /productos
+            Method: POST
+
+  ObtenerProductoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: pos-obtener-producto
+      CodeUri: src/productos/
+      Handler: obtener.handler
+      Description: Obtiene un producto por su ID
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ProductosTable
+      Events:
+        ObtenerProducto:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PosApi
+            Path: /productos/{id}
+            Method: GET
+
+  # Ventas
+  ListarVentasFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: pos-listar-ventas
+      CodeUri: src/ventas/
+      Handler: listar.handler
+      Description: Lista el historial de ventas
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref VentasTable
+      Events:
+        ListarVentas:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PosApi
+            Path: /ventas
+            Method: GET
+
+  CrearVentaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: pos-crear-venta
+      CodeUri: src/ventas/
+      Handler: crear.handler
+      Description: Registra una nueva venta
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref VentasTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref ProductosTable
+      Events:
+        CrearVenta:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PosApi
+            Path: /ventas
+            Method: POST
+
+  ObtenerVentaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: pos-obtener-venta
+      CodeUri: src/ventas/
+      Handler: obtener.handler
+      Description: Obtiene una venta por su ID
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref VentasTable
+      Events:
+        ObtenerVenta:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PosApi
+            Path: /ventas/{id}
+            Method: GET
+
+  # Inicializar datos
+  InicializarDatosFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: pos-inicializar-datos
+      CodeUri: src/admin/
+      Handler: inicializar.handler
+      Description: Carga el catalogo inicial de productos
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ProductosTable
+      Events:
+        InicializarDatos:
+          Type: Api
+          Properties:
+            RestApiId: !Ref PosApi
+            Path: /admin/inicializar
+            Method: POST
+
+  # ─── API GATEWAY ────────────────────────────────────────────────────────────
+  PosApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: pos-api
+      StageName: Prod
+      Cors:
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+        AllowHeaders: "'Content-Type,Authorization'"
+        AllowOrigin: "'*'"
+
+Outputs:
+  ApiUrl:
+    Description: URL base de la API del sistema POS
+    Value: !Sub "https://${PosApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"
+    Export:
+      Name: PosApiUrl
+
+  ProductosTableName:
+    Description: Nombre de la tabla DynamoDB de productos
+    Value: !Ref ProductosTable
+
+  VentasTableName:
+    Description: Nombre de la tabla DynamoDB de ventas
+    Value: !Ref VentasTable

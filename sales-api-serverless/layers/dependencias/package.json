@@ -1,0 +1,8 @@
+{
+  "name": "pos-dependencias",
+  "version": "1.0.0",
+  "description": "Dependencias compartidas para las funciones Lambda del POS",
+  "dependencies": {
+    "uuid": "9.0.0"
+  }
+}
