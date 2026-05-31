@@ -1,0 +1,15 @@
+{
+  "name": "sales-api-serverless",
+  "version": "1.0.0",
+  "description": "Backend serverless del sistema POS - AWS Lambda + DynamoDB",
+  "scripts": {
+    "test": "jest --coverage",
+    "test:watch": "jest --watch"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-dynamodb": "3.600.0",
+    "@aws-sdk/lib-dynamodb": "3.600.0",
+    "jest": "29.7.0",
+    "uuid": "9.0.0"
+  }
+}
