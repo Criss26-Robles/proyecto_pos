@@ -1,98 +1,96 @@
-# Requirements — Sistema POS Serverless
+# Requirements Document
 
-## Descripcion General
-Sistema de Punto de Venta (POS) serverless construido sobre AWS. Permite buscar productos por codigo de barras o nombre, gestionar un carrito de compras y registrar ventas con descuento automatico de stock.
+## Introduction
 
----
+Backend serverless del sistema POS construido con AWS SAM. Expone endpoints REST mediante API Gateway, ejecuta la lógica en funciones Lambda Node.js 20.x y persiste los datos en DynamoDB. Implementado siguiendo el enfoque Spec-Driven Development (SDD).
 
-## Requisitos Funcionales
+## Requirements
 
 ### RF-01: Buscar productos
-- El sistema debe permitir buscar productos por codigo de barras (valor numerico exacto)
-- El sistema debe permitir buscar productos por nombre (busqueda parcial, insensible a mayusculas)
-- Si el input es completamente numerico, se asume codigo de barras
-- Si el input contiene letras, se asume nombre parcial
-- Response exitoso: lista de productos con id, nombre, codigoBarras, precio, stock
+
+**User Story:** Como cajero, quiero buscar productos por nombre o código de barras para agregarlos al carrito.
+
+#### Acceptance Criteria
+
+1. GIVEN el cliente hace GET /productos sin parámetros WHEN Lambda consulta DynamoDB THEN retorna todos los productos con status 200
+2. GIVEN el cliente hace GET /productos?q=leche WHEN Lambda filtra por nombre THEN retorna solo productos cuyo nombre contenga "leche" (case insensitive) con status 200
+3. GIVEN el cliente hace GET /productos?q=P001 WHEN Lambda filtra por código de barras THEN retorna el producto con ese código con status 200
+4. GIVEN no hay productos en la tabla WHEN Lambda hace Scan THEN retorna array vacío `[]` con status 200
+5. GIVEN DynamoDB no está disponible WHEN Lambda intenta conectarse THEN retorna status 500 con `{"mensaje": "Error interno del servidor"}`
+
+---
 
 ### RF-02: Registrar venta
-- El sistema debe registrar una venta con uno o mas productos
-- Cada producto en la venta debe incluir: productId, productName, productPrice, cantidad
-- La venta debe incluir: total, metodoPago, fecha
-- Al registrar la venta, el stock de cada producto debe descontarse automaticamente
-- Response exitoso: ventaId, productos, total, metodoPago, fecha
+
+**User Story:** Como cajero, quiero registrar una venta con los productos del carrito para completar el cobro.
+
+#### Acceptance Criteria
+
+1. GIVEN el cliente hace POST /ventas con productos válidos WHEN Lambda guarda en DynamoDB THEN retorna status 201 con el objeto de la venta incluyendo id, productos, total, metodoPago y fecha
+2. GIVEN el body tiene productos vacíos `[]` WHEN Lambda valida THEN retorna status 400 con `{"mensaje": "El carrito está vacío"}`
+3. GIVEN el body no tiene campo productos WHEN Lambda valida THEN retorna status 400
+4. GIVEN metodoPago no se envía WHEN Lambda procesa THEN usa "efectivo" como valor por defecto
+5. GIVEN DynamoDB no está disponible WHEN Lambda intenta guardar THEN retorna status 500 con `{"mensaje": "Error interno del servidor"}`
+
+---
 
 ### RF-03: Estructura NoSQL correcta
-- La tabla Productos debe tener solo dos atributos: id (PK) y detalle (Map)
-- La tabla Ventas debe tener solo dos atributos: id (PK) y detalle (Map)
-- El campo detalle en Ventas debe contener un array nativo de productos (List), no un string JSON
+
+**User Story:** Como arquitecto, quiero que los datos se almacenen en formato NoSQL para aprovechar DynamoDB.
+
+#### Acceptance Criteria
+
+1. GIVEN una venta se registra WHEN se guarda en DynamoDB THEN los productos están embebidos como array dentro del documento de la venta — sin tablas relacionales intermedias
+2. GIVEN un producto se crea WHEN se guarda en DynamoDB THEN tiene los campos id, nombre, codigo_barras, precio, stock y creadoEn en el mismo documento
+
+---
 
 ### RF-04: Crear producto
-- El sistema debe permitir crear nuevos productos
-- Campos requeridos: nombre, codigo_barras, precio, stock
-- El producto se guarda con estructura id + detalle en DynamoDB
+
+**User Story:** Como administrador, quiero agregar nuevos productos al catálogo.
+
+#### Acceptance Criteria
+
+1. GIVEN el cliente hace POST /productos con nombre, codigo_barras y precio WHEN Lambda valida y guarda THEN retorna status 201 con el producto creado incluyendo id generado
+2. GIVEN falta nombre, codigo_barras o precio WHEN Lambda valida THEN retorna status 400 con mensaje descriptivo
 
 ---
 
-## Requisitos No Funcionales
+### RF-05: Inicializar catálogo
+
+**User Story:** Como administrador, quiero cargar los productos iniciales al desplegar el sistema.
+
+#### Acceptance Criteria
+
+1. GIVEN la tabla está vacía WHEN se llama POST /admin/inicializar THEN se cargan 10 productos y retorna status 201
+2. GIVEN la tabla ya tiene productos WHEN se llama POST /admin/inicializar THEN no modifica nada y retorna status 200 con mensaje informativo
+
+---
 
 ### RNF-01: Serverless
-- Toda la logica de negocio debe ejecutarse en AWS Lambda
-- No se permite administrar servidores
-- Cada Lambda ejecuta una sola funcion
+
+1. GIVEN cualquier petición llega WHEN se procesa THEN debe ejecutarse en AWS Lambda sin servidores administrados
 
 ### RNF-02: Escalabilidad
-- La infraestructura debe escalar automaticamente segun la demanda
-- DynamoDB y Lambda escalan sin configuracion adicional
+
+1. GIVEN la carga aumenta WHEN DynamoDB y Lambda reciben más peticiones THEN escalan automáticamente sin configuración adicional
 
 ### RNF-03: Latencia
-- El tiempo de respuesta de cada Lambda no debe superar 30 segundos (timeout configurado)
-- En condiciones normales la respuesta debe ser menor a 3 segundos
+
+1. GIVEN una petición normal llega WHEN Lambda responde THEN el tiempo de respuesta debe ser menor a 30 segundos (timeout configurado)
 
 ### RNF-04: Seguridad
-- Cada Lambda debe tener permisos IAM minimos necesarios (principio de minimo privilegio)
-- No se deben exponer credenciales AWS en el codigo ni en el repositorio
 
----
+1. GIVEN cada Lambda se despliega WHEN se asignan permisos IAM THEN solo tiene acceso a la tabla DynamoDB que necesita — principio de mínimo privilegio
+2. GIVEN el código se sube a GitHub WHEN se revisa el repositorio THEN no debe haber credenciales AWS ni archivos .env con datos sensibles
 
-## Criterios de Aceptacion (Casos de Prueba)
+## Glossary
 
-### CA-01: GET /productos con codigo de barras
-- Input: q=750123456789 (numerico)
-- Expected: array con el producto cuyo codigoBarras sea 750123456789
-- HTTP: 200
-
-### CA-02: GET /productos con nombre parcial
-- Input: q=leche
-- Expected: array con todos los productos cuyo nombre contenga "leche" (case insensitive)
-- HTTP: 200
-
-### CA-03: GET /productos tabla vacia
-- Input: q=productoinexistente
-- Expected: array vacio []
-- HTTP: 200
-
-### CA-04: GET /productos sin parametro
-- Input: sin q
-- Expected: todos los productos de la tabla
-- HTTP: 200
-
-### CA-05: POST /ventas exitoso
-- Input: { productos: [{productId, productName, productPrice, cantidad}], total, metodoPago }
-- Expected: { ventaId, productos, total, metodoPago, fecha }
-- HTTP: 200
-- Stock descontado en DynamoDB
-
-### CA-06: POST /ventas sin productos
-- Input: { productos: [], total: 0 }
-- Expected: { error: "No hay productos en la venta" }
-- HTTP: 400
-
-### CA-07: POST /ventas body invalido
-- Input: body vacio o malformado
-- Expected: { error: "Cuerpo de la peticion invalido" }
-- HTTP: 400
-
-### CA-08: Error de conexion DynamoDB
-- Simulado con mock que lanza DynamoDbException
-- Expected: { error: "Error interno del servidor" }
-- HTTP: 500
+- **SAM**: Serverless Application Model — herramienta de AWS para definir infraestructura serverless como código
+- **Lambda**: Función serverless de AWS que ejecuta código sin administrar servidores
+- **API Gateway**: Servicio de AWS que expone endpoints HTTP y los conecta con Lambdas
+- **DynamoDB**: Base de datos NoSQL de AWS con escalado automático
+- **PK**: Partition Key — clave primaria de una tabla DynamoDB
+- **SDD**: Spec-Driven Development — metodología donde los specs se escriben antes del código
+- **CORS**: Cross-Origin Resource Sharing — headers que permiten al frontend consumir la API desde otro dominio
+- **IAM**: Identity and Access Management — sistema de permisos de AWS
