@@ -63,3 +63,13 @@ logs/
 *.tmp
 *.bak
 *.orig
+
+# --- Cobertura de pruebas ---
+coverage/
+lcov-report/
+*.lcov
+
+# --- Postman (workspace config) ---
+.postman/
+postman/globals/
+postman/screenshots/
