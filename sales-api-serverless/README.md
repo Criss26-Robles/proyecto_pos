@@ -120,6 +120,8 @@ npm test
 
 ### Resultados
 
+![Pruebas unitarias](docs/tests-resultado.png)
+
 ```
 Test Suites: 2 passed, 2 total
 Tests:       12 passed, 12 total
