@@ -1,0 +1,300 @@
+/* ─── VARIABLES CSS ─────────────────────────────────────────────────────────── */
+:root {
+  --bg-primary:    #0d0d1a;
+  --bg-secondary:  #1a1a2e;
+  --bg-card:       #16213e;
+  --color-accent:  #00ff88;
+  --color-danger:  #ff4757;
+  --color-warning: #ffa502;
+  --text-primary:  #e0e0e0;
+  --text-muted:    #888;
+  --border-color:  #2a2a4a;
+  --radius:        8px;
+  --shadow:        0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* ─── RESET Y BASE ───────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* ─── HEADER ─────────────────────────────────────────────────────────────────── */
+header {
+  background-color: var(--bg-secondary);
+  border-bottom: 2px solid var(--color-accent);
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+header h1 {
+  color: var(--color-accent);
+  font-size: 1.5rem;
+  letter-spacing: 2px;
+}
+
+header span {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+/* ─── NAVEGACIÓN ─────────────────────────────────────────────────────────────── */
+nav {
+  background-color: var(--bg-secondary);
+  padding: 0.5rem 2rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+nav a {
+  color: var(--text-muted);
+  text-decoration: none;
+  margin-right: 1.5rem;
+  font-size: 0.9rem;
+  transition: color 0.2s;
+}
+
+nav a:hover, nav a.activo {
+  color: var(--color-accent);
+}
+
+/* ─── LAYOUT PRINCIPAL — CSS GRID ────────────────────────────────────────────── */
+main {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  grid-template-rows: auto 1fr;
+  gap: 1.5rem;
+  padding: 1.5rem 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ─── MENSAJE DE NOTIFICACIÓN ────────────────────────────────────────────────── */
+#mensaje {
+  display: none;
+  grid-column: 1 / -1;
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius);
+  font-weight: 500;
+  animation: fadeIn 0.3s ease;
+}
+
+#mensaje.success {
+  background-color: rgba(0, 255, 136, 0.15);
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent);
+}
+
+#mensaje.error {
+  background-color: rgba(255, 71, 87, 0.15);
+  border: 1px solid var(--color-danger);
+  color: var(--color-danger);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── SECCIONES ──────────────────────────────────────────────────────────────── */
+section {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  box-shadow: var(--shadow);
+}
+
+section h2 {
+  color: var(--color-accent);
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* ─── TABLA DE PRODUCTOS ─────────────────────────────────────────────────────── */
+.tabla-container {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+thead th {
+  background-color: var(--bg-secondary);
+  color: var(--color-accent);
+  padding: 0.6rem 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+}
+
+tbody tr {
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.15s;
+}
+
+tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+tbody td {
+  padding: 0.6rem 0.75rem;
+  color: var(--text-primary);
+}
+
+/* ─── BOTONES ────────────────────────────────────────────────────────────────── */
+.btn-agregar {
+  background-color: transparent;
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent);
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.btn-agregar:hover {
+  background-color: var(--color-accent);
+  color: var(--bg-primary);
+}
+
+.btn-eliminar {
+  background-color: transparent;
+  border: 1px solid var(--color-danger);
+  color: var(--color-danger);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.btn-eliminar:hover {
+  background-color: var(--color-danger);
+  color: white;
+}
+
+#btn-confirmar {
+  width: 100%;
+  padding: 0.85rem;
+  background-color: var(--color-accent);
+  color: var(--bg-primary);
+  border: none;
+  border-radius: var(--radius);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: opacity 0.2s;
+  letter-spacing: 1px;
+}
+
+#btn-confirmar:hover {
+  opacity: 0.85;
+}
+
+#btn-confirmar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ─── CARRITO — FLEXBOX ──────────────────────────────────────────────────────── */
+.carrito-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--border-color);
+  margin-top: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.carrito-total span:last-child {
+  color: var(--color-accent);
+  font-size: 1.3rem;
+}
+
+/* ─── MÉTODO DE PAGO ─────────────────────────────────────────────────────────── */
+.form-grupo {
+  margin-top: 1rem;
+}
+
+.form-grupo label {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.form-grupo select {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.form-grupo select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+/* ─── LOADING ────────────────────────────────────────────────────────────────── */
+#loading-productos {
+  display: none;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.9rem;
+}
+
+/* ─── UTILIDADES ─────────────────────────────────────────────────────────────── */
+.text-center  { text-align: center; }
+.text-right   { text-align: right; }
+.carrito-vacio { text-align: center; color: var(--text-muted); padding: 1.5rem; }
+.error-texto  { color: var(--color-danger); text-align: center; padding: 1rem; }
+
+/* ─── FOOTER ─────────────────────────────────────────────────────────────────── */
+footer {
+  text-align: center;
+  padding: 1rem;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  border-top: 1px solid var(--border-color);
+  margin-top: 2rem;
+}
+
+/* ─── RESPONSIVE ─────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  main {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+  }
+}

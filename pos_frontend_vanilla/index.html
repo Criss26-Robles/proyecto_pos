@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema POS — Punto de Venta</title>
+  <link rel="stylesheet" href="css/estilos.css" />
+</head>
+<body>
+
+  <!-- HEADER semántico con el título del sistema -->
+  <header>
+    <h1>🛒 Sistema POS</h1>
+    <span>Punto de Venta — AWS Serverless</span>
+  </header>
+
+  <!-- NAV semántico para navegación -->
+  <nav aria-label="Navegación principal">
+    <a href="index.html" class="activo">Punto de Venta</a>
+    <a href="#" onclick="location.reload(); return false;">↺ Recargar productos</a>
+  </nav>
+
+  <!-- MAIN con layout CSS Grid: productos | carrito -->
+  <main>
+
+    <!-- Notificación de éxito o error -->
+    <div id="mensaje" role="alert" aria-live="polite"></div>
+
+    <!-- SECTION: Catálogo de productos -->
+    <section aria-labelledby="titulo-productos">
+      <h2 id="titulo-productos">Catálogo de Productos</h2>
+
+      <p id="loading-productos" aria-live="polite">Cargando productos...</p>
+
+      <div class="tabla-container">
+        <table aria-label="Listado de productos disponibles">
+          <thead>
+            <tr>
+              <th scope="col">Producto</th>
+              <th scope="col" class="text-right">Precio</th>
+              <th scope="col" class="text-center">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-productos">
+            <!-- Productos cargados dinámicamente por app.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION: Carrito de compras -->
+    <section aria-labelledby="titulo-carrito">
+      <h2 id="titulo-carrito">Carrito de Compras</h2>
+
+      <table aria-label="Items en el carrito">
+        <thead>
+          <tr>
+            <th scope="col">Producto</th>
+            <th scope="col" class="text-center">Cant.</th>
+            <th scope="col" class="text-right">Subtotal</th>
+            <th scope="col" class="text-center">✕</th>
+          </tr>
+        </thead>
+        <tbody id="lista-carrito">
+          <!-- Items del carrito renderizados por app.js -->
+        </tbody>
+      </table>
+
+      <!-- Total del carrito -->
+      <div class="carrito-total">
+        <span>Total:</span>
+        <span id="total-carrito">$0.00</span>
+      </div>
+
+      <!-- FORM: Método de pago y confirmación -->
+      <form id="form-venta" onsubmit="return false;" aria-label="Formulario de pago">
+        <div class="form-grupo">
+          <label for="metodo-pago">Método de pago</label>
+          <select id="metodo-pago" name="metodoPago" required>
+            <option value="efectivo">Efectivo</option>
+            <option value="Nequi">Nequi</option>
+            <option value="Davivienda">Davivienda</option>
+            <option value="Daviplata">Daviplata</option>
+            <option value="Transferencia">Transferencia</option>
+          </select>
+        </div>
+
+        <button type="button" id="btn-confirmar" aria-label="Confirmar y registrar la venta">
+          Confirmar venta
+        </button>
+      </form>
+    </section>
+
+  </main>
+
+  <!-- FOOTER semántico -->
+  <footer>
+    <p>Sistema POS — Backend desplegado en AWS Lambda + DynamoDB</p>
+  </footer>
+
+  <!-- Script como módulo ES6 para usar import/export -->
+  <script type="module" src="src/app.js"></script>
+
+</body>
+</html>

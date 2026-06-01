@@ -1,0 +1,5 @@
+# No hay node_modules en este proyecto — Vanilla JS puro
+node_modules/
+.env
+.DS_Store
+*.log
