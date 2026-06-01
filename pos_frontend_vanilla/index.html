@@ -3,103 +3,174 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sistema POS — Punto de Venta</title>
+  <title>Sistema POS</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" href="css/estilos.css" />
 </head>
 <body>
 
-  <!-- HEADER semántico con el título del sistema -->
-  <header>
-    <h1>🛒 Sistema POS</h1>
-    <span>Punto de Venta — AWS Serverless</span>
-  </header>
-
-  <!-- NAV semántico para navegación -->
-  <nav aria-label="Navegación principal">
-    <a href="index.html" class="activo">Punto de Venta</a>
-    <a href="#" onclick="location.reload(); return false;">↺ Recargar productos</a>
+  <!-- NAV -->
+  <nav class="navbar navbar-expand-lg">
+    <div class="container">
+      <a class="navbar-brand" href="index.html">POS System</a>
+      <div class="collapse navbar-collapse">
+        <ul class="navbar-nav ms-auto align-items-center gap-1">
+          <li class="nav-item"><a class="nav-link nav-pill active" href="index.html">Punto de Venta</a></li>
+          <li class="nav-item"><a class="nav-link nav-pill" href="historial.html">Historial</a></li>
+        </ul>
+      </div>
+    </div>
   </nav>
 
-  <!-- MAIN con layout CSS Grid: productos | carrito -->
-  <main>
+  <main class="container mt-4 pb-5">
 
-    <!-- Notificación de éxito o error -->
-    <div id="mensaje" role="alert" aria-live="polite"></div>
+    <!-- Alertas -->
+    <div id="alertaContainer"></div>
 
-    <!-- SECTION: Catálogo de productos -->
-    <section aria-labelledby="titulo-productos">
-      <h2 id="titulo-productos">Catálogo de Productos</h2>
+    <div class="row g-4">
 
-      <p id="loading-productos" aria-live="polite">Cargando productos...</p>
+      <!-- Columna izquierda: búsqueda -->
+      <div class="col-lg-8">
+        <div class="pos-card">
+          <div class="pos-card-body">
+            <div class="search-form mb-4">
+              <div class="search-wrapper">
+                <input type="text" id="inputBusqueda" class="search-input"
+                  placeholder="Codigo de barras o nombre del producto..."
+                  autocomplete="off" autofocus />
+              </div>
+              <small style="color:#666; margin-top:6px; display:block;">
+                Escribe un codigo de barras (numerico) o nombre y presiona Enter
+              </small>
+            </div>
 
-      <div class="tabla-container">
-        <table aria-label="Listado de productos disponibles">
-          <thead>
-            <tr>
-              <th scope="col">Producto</th>
-              <th scope="col" class="text-right">Precio</th>
-              <th scope="col" class="text-center">Acción</th>
-            </tr>
-          </thead>
-          <tbody id="tabla-productos">
-            <!-- Productos cargados dinámicamente por app.js -->
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- SECTION: Carrito de compras -->
-    <section aria-labelledby="titulo-carrito">
-      <h2 id="titulo-carrito">Carrito de Compras</h2>
-
-      <table aria-label="Items en el carrito">
-        <thead>
-          <tr>
-            <th scope="col">Producto</th>
-            <th scope="col" class="text-center">Cant.</th>
-            <th scope="col" class="text-right">Subtotal</th>
-            <th scope="col" class="text-center">✕</th>
-          </tr>
-        </thead>
-        <tbody id="lista-carrito">
-          <!-- Items del carrito renderizados por app.js -->
-        </tbody>
-      </table>
-
-      <!-- Total del carrito -->
-      <div class="carrito-total">
-        <span>Total:</span>
-        <span id="total-carrito">$0.00</span>
-      </div>
-
-      <!-- FORM: Método de pago y confirmación -->
-      <form id="form-venta" onsubmit="return false;" aria-label="Formulario de pago">
-        <div class="form-grupo">
-          <label for="metodo-pago">Método de pago</label>
-          <select id="metodo-pago" name="metodoPago" required>
-            <option value="efectivo">Efectivo</option>
-            <option value="Nequi">Nequi</option>
-            <option value="Davivienda">Davivienda</option>
-            <option value="Daviplata">Daviplata</option>
-            <option value="Transferencia">Transferencia</option>
-          </select>
+            <div id="resultadoBusqueda" style="display:none; margin-top:16px;">
+              <table class="pos-table">
+                <thead>
+                  <tr>
+                    <th>Codigo</th>
+                    <th>Producto</th>
+                    <th class="text-end">Precio</th>
+                    <th class="text-center">Stock</th>
+                    <th class="text-center">Accion</th>
+                  </tr>
+                </thead>
+                <tbody id="tablaResultados"></tbody>
+              </table>
+            </div>
+          </div>
         </div>
+      </div>
 
-        <button type="button" id="btn-confirmar" aria-label="Confirmar y registrar la venta">
-          Confirmar venta
-        </button>
-      </form>
-    </section>
+      <!-- Columna derecha: carrito -->
+      <div class="col-lg-4">
+        <div class="pos-card cart-card">
+          <div class="pos-card-header">
+            <div class="header-left"><span>Carrito</span></div>
+            <span class="badge-count" id="badgeCount" style="display:none;"></span>
+          </div>
+          <div class="pos-card-body">
 
+            <!-- Items del carrito -->
+            <div id="carritoContenido">
+              <div class="cart-empty">
+                <p>El carrito esta vacio</p>
+                <small>Agrega productos del catalogo</small>
+              </div>
+            </div>
+
+            <!-- Total -->
+            <div class="cart-total" id="cartTotalRow" style="display:none;">
+              <span class="cart-total-label">Total</span>
+              <span class="cart-total-amount" id="cartTotal">$ 0.00</span>
+            </div>
+
+            <!-- Acciones -->
+            <div class="cart-actions mt-3">
+              <button id="btn-confirmar-venta" class="btn-confirm" onclick="abrirF4()">
+                Confirmar Venta (F4)
+              </button>
+              <button id="btn-vaciar" class="btn-clear" onclick="vaciarCarrito()" style="display:none;">
+                Vaciar carrito
+              </button>
+            </div>
+
+            <!-- Atajos -->
+            <div style="margin-top:16px; background:#0d0d1a; border-radius:8px; padding:12px;">
+              <div style="color:#555; font-size:11px; margin-bottom:8px; text-align:center; text-transform:uppercase; letter-spacing:1px;">Atajos de teclado</div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px;">
+                <div style="color:#aaa; font-size:12px;"><span style="color:#00ff88;">F2</span> Metodo pago</div>
+                <div style="color:#aaa; font-size:12px;"><span style="color:#00ff88;">F4</span> Efectivo</div>
+                <div style="color:#aaa; font-size:12px;"><span style="color:#00ff88;">F3</span> Vaciar carrito</div>
+                <div style="color:#aaa; font-size:12px;"><span style="color:#00ff88;">F5</span> Buscar</div>
+                <div style="color:#aaa; font-size:12px;"><span style="color:#00ff88;">ESC</span> Cerrar modal</div>
+                <div style="color:#aaa; font-size:12px;"><span style="color:#00ff88;">Enter</span> Agregar</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
   </main>
 
-  <!-- FOOTER semántico -->
-  <footer>
-    <p>Sistema POS — Backend desplegado en AWS Lambda + DynamoDB</p>
-  </footer>
+  <!-- Modal F4 Efectivo -->
+  <div id="modalEfectivo" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:#1a1a2e; border:1px solid #00ff88; border-radius:12px; padding:32px; width:420px;">
+      <h4 style="color:#00ff88; margin-bottom:24px; text-align:center;">Cobro en Efectivo</h4>
+      <div style="background:#0d0d1a; border-radius:8px; padding:16px; margin-bottom:20px; text-align:center;">
+        <div style="color:#aaa; font-size:14px; margin-bottom:4px;">Total a pagar</div>
+        <div id="totalMostrar" style="color:#00ff88; font-size:32px; font-weight:bold;"></div>
+      </div>
+      <div style="margin-bottom:20px;">
+        <label style="color:#aaa; display:block; margin-bottom:8px;">Monto recibido</label>
+        <input type="number" id="montoRecibido" step="0.01" min="0"
+          style="width:100%; padding:12px; font-size:18px; border:1px solid #333; border-radius:8px; background:#0d0d1a; color:#fff; text-align:center;"
+          placeholder="0" />
+      </div>
+      <div id="cambioBox" style="display:none; background:#1a3a2a; border:1px solid #00ff88; border-radius:8px; padding:16px; margin-bottom:20px; text-align:center;">
+        <div style="color:#aaa; font-size:14px;">Cambio</div>
+        <div id="cambioMostrar" style="color:#00ff88; font-size:28px; font-weight:bold;"></div>
+      </div>
+      <div style="display:flex; gap:12px;">
+        <button onclick="cerrarModal('modalEfectivo')" style="flex:1; padding:12px; background:#333; border:none; border-radius:8px; color:#fff; cursor:pointer; font-size:16px;">Cancelar</button>
+        <button onclick="confirmarEfectivo()" style="flex:2; padding:12px; background:#00ff88; border:none; border-radius:8px; color:#000; cursor:pointer; font-size:16px; font-weight:bold;">Confirmar Venta</button>
+      </div>
+    </div>
+  </div>
 
-  <!-- Script como módulo ES6 para usar import/export -->
+  <!-- Modal F2 Metodo de pago -->
+  <div id="modalMetodoPago" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:#1a1a2e; border:1px solid #00ff88; border-radius:12px; padding:32px; width:420px;">
+      <h4 style="color:#00ff88; margin-bottom:24px; text-align:center;">Metodo de Pago</h4>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px;">
+        <button onclick="seleccionarMetodo('Nequi')" class="btn-metodo">Nequi</button>
+        <button onclick="seleccionarMetodo('Davivienda')" class="btn-metodo">Davivienda</button>
+        <button onclick="seleccionarMetodo('Daviplata')" class="btn-metodo">Daviplata</button>
+        <button onclick="seleccionarMetodo('Transferencia')" class="btn-metodo">Transferencia</button>
+      </div>
+      <button onclick="cerrarModal('modalMetodoPago')" style="width:100%; padding:12px; background:#333; border:none; border-radius:8px; color:#fff; cursor:pointer; font-size:16px;">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Modal confirmacion -->
+  <div id="modalConfirmacion" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1001; align-items:center; justify-content:center;">
+    <div style="background:#1a1a2e; border:1px solid #00ff88; border-radius:12px; padding:32px; width:380px; text-align:center;">
+      <div style="font-size:32px; margin-bottom:16px; color:#00ff88;">✓</div>
+      <h4 id="confirmacionTitulo" style="color:#00ff88; margin-bottom:8px;"></h4>
+      <p id="confirmacionDetalle" style="color:#aaa; margin-bottom:24px;"></p>
+      <div style="display:flex; gap:12px;">
+        <button onclick="cerrarModal('modalConfirmacion')" style="flex:1; padding:12px; background:#333; border:none; border-radius:8px; color:#fff; cursor:pointer;">Cancelar</button>
+        <button id="btnConfirmarFinal" style="flex:2; padding:12px; background:#00ff88; border:none; border-radius:8px; color:#000; cursor:pointer; font-weight:bold;">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .btn-metodo { padding:16px; background:#0d0d1a; border:1px solid #333; border-radius:8px; color:#fff; cursor:pointer; font-size:16px; transition:all 0.2s; }
+    .btn-metodo:hover { border-color:#00ff88; color:#00ff88; }
+  </style>
+
   <script type="module" src="src/app.js"></script>
-
 </body>
 </html>
