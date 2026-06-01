@@ -37,28 +37,22 @@ Se eligió Vanilla JS porque:
 ### Opción 1 — Abrir directamente (más simple)
 
 ```bash
-# Clonar el repositorio
 git clone https://github.com/Criss26-Robles/proyecto_pos.git
 cd proyecto_pos/pos_frontend_vanilla
-
-# Abrir en el navegador
-open index.html   # macOS
-xdg-open index.html  # Linux
 ```
 
-O simplemente arrastra el archivo `index.html` al navegador.
+Arrastra `index.html` al navegador o abre con doble clic.
 
-### Opción 2 — Con servidor local (recomendado para evitar CORS en algunos navegadores)
+### Opción 2 — Con servidor local (recomendado)
 
 ```bash
-# Con Python
+cd proyecto_pos/pos_frontend_vanilla
 python3 -m http.server 5500
-
-# Con Node.js (npx)
-npx serve .
 ```
 
-Luego abre `http://localhost:5500`
+Abre `http://localhost:5500`
+
+> No requiere `npm install` — Vanilla JS puro sin dependencias.
 
 ---
 
