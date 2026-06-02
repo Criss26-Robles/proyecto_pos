@@ -20,6 +20,8 @@ const cartTotalRow      = document.getElementById('cartTotalRow');
 const cartTotal         = document.getElementById('cartTotal');
 const badgeCount        = document.getElementById('badgeCount');
 const btnVaciar         = document.getElementById('btn-vaciar');
+const columnaCarrito    = document.getElementById('columnaCarrito');
+const columnaBusqueda   = document.getElementById('columnaBusqueda');
 
 // ─── AUTOCOMPLETE ─────────────────────────────────────────────────────────────
 
@@ -225,6 +227,10 @@ function renderizarCarrito() {
     cartTotalRow.style.display = 'none';
     badgeCount.style.display = 'none';
     btnVaciar.style.display = 'none';
+    // Ocultar carrito y expandir búsqueda
+    columnaCarrito.style.display = 'none';
+    columnaBusqueda.classList.remove('col-lg-8');
+    columnaBusqueda.classList.add('col-lg-12');
     return;
   }
   carritoContenido.innerHTML = '<div class="cart-items">' + carrito.map((item) => `
@@ -247,6 +253,10 @@ function renderizarCarrito() {
   badgeCount.textContent = carrito.length;
   badgeCount.style.display = 'inline';
   btnVaciar.style.display = 'block';
+  // Mostrar carrito y ajustar columnas
+  columnaCarrito.style.display = 'block';
+  columnaBusqueda.classList.remove('col-lg-12');
+  columnaBusqueda.classList.add('col-lg-8');
   document.querySelectorAll('.qty-minus').forEach(btn =>
     btn.addEventListener('click', () => actualizarCantidad(btn.dataset.id, -1))
   );
@@ -485,6 +495,7 @@ document.addEventListener('keypress', function(e) {
 
 document.addEventListener('DOMContentLoaded', () => {
   initDropdown();
-  renderizarCarrito();
+  renderizarCarrito(); // carrito vacío → oculta columna carrito, expande búsqueda
+  columnaBusqueda.classList.add('col-lg-12');
   inputBusqueda.focus();
 });

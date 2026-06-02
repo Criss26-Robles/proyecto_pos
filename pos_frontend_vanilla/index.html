@@ -23,17 +23,16 @@
 
   <main class="container mt-4 pb-5">
 
-    <!-- Alertas -->
     <div id="alertaContainer"></div>
 
     <div class="row g-4">
 
       <!-- Columna izquierda: búsqueda -->
-      <div class="col-lg-8">
+      <div class="col-lg-8" id="columnaBusqueda">
         <div class="pos-card">
           <div class="pos-card-body">
             <div class="search-form mb-4">
-              <div class="search-wrapper">
+              <div class="search-wrapper" style="position:relative;">
                 <input type="text" id="inputBusqueda" class="search-input"
                   placeholder="Codigo de barras o nombre del producto..."
                   autocomplete="off" autofocus />
@@ -61,8 +60,8 @@
         </div>
       </div>
 
-      <!-- Columna derecha: carrito -->
-      <div class="col-lg-4">
+      <!-- Columna derecha: carrito (oculto hasta que haya productos) -->
+      <div class="col-lg-4" id="columnaCarrito" style="display:none;">
         <div class="pos-card cart-card">
           <div class="pos-card-header">
             <div class="header-left"><span>Carrito</span></div>
@@ -70,7 +69,6 @@
           </div>
           <div class="pos-card-body">
 
-            <!-- Items del carrito -->
             <div id="carritoContenido">
               <div class="cart-empty">
                 <p>El carrito esta vacio</p>
@@ -78,13 +76,11 @@
               </div>
             </div>
 
-            <!-- Total -->
             <div class="cart-total" id="cartTotalRow" style="display:none;">
               <span class="cart-total-label">Total</span>
               <span class="cart-total-amount" id="cartTotal">$ 0.00</span>
             </div>
 
-            <!-- Acciones -->
             <div class="cart-actions mt-3">
               <button id="btn-confirmar-venta" class="btn-confirm" onclick="abrirF4()">
                 Confirmar Venta (F4)
@@ -94,7 +90,6 @@
               </button>
             </div>
 
-            <!-- Atajos -->
             <div style="margin-top:16px; background:#0d0d1a; border-radius:8px; padding:12px;">
               <div style="color:#555; font-size:11px; margin-bottom:8px; text-align:center; text-transform:uppercase; letter-spacing:1px;">Atajos de teclado</div>
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px;">
@@ -168,6 +163,7 @@
   <style>
     .btn-metodo { padding:16px; background:#0d0d1a; border:1px solid #333; border-radius:8px; color:#fff; cursor:pointer; font-size:16px; transition:all 0.2s; }
     .btn-metodo:hover { border-color:#00ff88; color:#00ff88; }
+    #autocomplete-dropdown .autocomplete-item:hover { background: var(--accent-glow) !important; }
   </style>
 
   <script type="module" src="src/app.js"></script>
