@@ -11,6 +11,10 @@ let indiceSugerencia = -1;
 let timeoutBusqueda = null;
 let dropdown = null;
 
+// ─── CONTEXTO DE TECLADO ─────────────────────────────────────────────────────
+// Solo un contexto activo a la vez: null | 'tabla' | 'metodo' | 'confirmacion'
+let contextoTeclado = null;
+
 // ─── REFERENCIAS DOM ─────────────────────────────────────────────────────────
 const inputBusqueda     = document.getElementById('inputBusqueda');
 const tablaResultados   = document.getElementById('tablaResultados');
@@ -22,6 +26,85 @@ const badgeCount        = document.getElementById('badgeCount');
 const btnVaciar         = document.getElementById('btn-vaciar');
 const columnaCarrito    = document.getElementById('columnaCarrito');
 const columnaBusqueda   = document.getElementById('columnaBusqueda');
+
+// ─── MANEJADOR GLOBAL DE TECLADO ─────────────────────────────────────────────
+
+document.addEventListener('keydown', function(e) {
+  // ESC siempre cierra todo
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    ['modalEfectivo', 'modalMetodoPago', 'modalConfirmacion'].forEach(id => {
+      document.getElementById(id).style.display = 'none';
+    });
+    cerrarDropdown();
+    resultadoBusqueda.style.display = 'none';
+    contextoTeclado = null;
+    inputBusqueda.focus();
+    return;
+  }
+
+  // Delegar según contexto activo
+  if (contextoTeclado === 'tabla') {
+    manejarTeclaTabla(e);
+    return;
+  }
+  if (contextoTeclado === 'metodo') {
+    manejarTeclaMetodo(e);
+    return;
+  }
+  if (contextoTeclado === 'confirmacion') {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      document.getElementById('btnConfirmarFinal')?.click();
+    }
+    return;
+  }
+
+  // Atajos globales (sin contexto activo)
+  if (e.key === 'F4') { e.preventDefault(); abrirF4(); }
+  if (e.key === 'F2') { e.preventDefault(); abrirModalMetodoPago(); }
+  if (e.key === 'F3') { e.preventDefault(); vaciarCarrito(); }
+  if (e.key === 'F5') {
+    e.preventDefault();
+    inputBusqueda.focus();
+    inputBusqueda.select();
+  }
+});
+
+// ─── HANDLERS DE CONTEXTO ────────────────────────────────────────────────────
+
+let filaActiva = 0;
+
+function manejarTeclaTabla(e) {
+  const filas = document.querySelectorAll('#tablaResultados .product-row');
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    resaltarFila(Math.min(filaActiva + 1, filas.length - 1));
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    resaltarFila(Math.max(filaActiva - 1, 0));
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    agregarFilaActiva();
+  }
+}
+
+let metodoActivo = 0;
+
+function manejarTeclaMetodo(e) {
+  const btns = document.querySelectorAll('#modalMetodoPago .btn-metodo');
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    resaltarMetodo(Math.min(metodoActivo + 1, btns.length - 1));
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    resaltarMetodo(Math.max(metodoActivo - 1, 0));
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    const metodo = btns[metodoActivo]?.dataset.metodo;
+    if (metodo) seleccionarMetodo(metodo);
+  }
+}
 
 // ─── AUTOCOMPLETE ─────────────────────────────────────────────────────────────
 
@@ -62,7 +145,6 @@ function renderDropdown() {
       background: ${i === indiceSugerencia ? 'rgba(0,232,122,0.12)' : 'transparent'};
       color: #e2e8f0;
       font-size: 0.875rem;
-      transition: background 0.1s;
     ">
       <span>${p.nombre}</span>
       <span style="font-family:monospace; font-size:0.78rem; color:#00e87a;">$ ${parseFloat(p.precio).toFixed(2)}</span>
@@ -76,9 +158,7 @@ function renderDropdown() {
       indiceSugerencia = parseInt(item.dataset.idx);
       renderDropdown();
     });
-    item.addEventListener('click', () => {
-      seleccionarSugerencia(parseInt(item.dataset.idx));
-    });
+    item.addEventListener('click', () => seleccionarSugerencia(parseInt(item.dataset.idx)));
   });
 }
 
@@ -115,6 +195,9 @@ inputBusqueda.addEventListener('input', function() {
 });
 
 inputBusqueda.addEventListener('keydown', async function(e) {
+  // Si hay un modal abierto, no procesar aquí
+  if (contextoTeclado && contextoTeclado !== 'tabla') return;
+
   if (sugerencias.length > 0) {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
@@ -227,7 +310,6 @@ function renderizarCarrito() {
     cartTotalRow.style.display = 'none';
     badgeCount.style.display = 'none';
     btnVaciar.style.display = 'none';
-    // Ocultar carrito y expandir búsqueda
     columnaCarrito.style.display = 'none';
     columnaBusqueda.classList.remove('col-lg-8');
     columnaBusqueda.classList.add('col-lg-12');
@@ -253,7 +335,6 @@ function renderizarCarrito() {
   badgeCount.textContent = carrito.length;
   badgeCount.style.display = 'inline';
   btnVaciar.style.display = 'block';
-  // Mostrar carrito y ajustar columnas
   columnaCarrito.style.display = 'block';
   columnaBusqueda.classList.remove('col-lg-12');
   columnaBusqueda.classList.add('col-lg-8');
@@ -287,30 +368,23 @@ async function buscarProducto(query) {
   }
 }
 
+function resaltarFila(idx) {
+  document.querySelectorAll('#tablaResultados .product-row').forEach((f, i) => {
+    f.style.background = i === idx ? 'rgba(0,232,122,0.1)' : '';
+    f.style.outline = i === idx ? '1px solid #00e87a' : '';
+  });
+  filaActiva = idx;
+}
+
+function agregarFilaActiva() {
+  const filas = document.querySelectorAll('#tablaResultados .product-row');
+  const fila = filas[filaActiva];
+  if (!fila) return;
+  agregarAlCarrito({ id: fila.dataset.id, nombre: fila.dataset.nombre, precio: fila.dataset.precio });
+  setTimeout(() => resaltarFila(filaActiva), 50);
+}
+
 function mostrarTablaResultados(productos) {
-  let filaActiva = 0;
-
-  function resaltarFila(idx) {
-    document.querySelectorAll('#tablaResultados .product-row').forEach((f, i) => {
-      f.style.background = i === idx ? 'rgba(0,232,122,0.1)' : '';
-      f.style.outline = i === idx ? '1px solid #00e87a' : '';
-    });
-    filaActiva = idx;
-  }
-
-  function agregarFilaActiva() {
-    const filas = document.querySelectorAll('#tablaResultados .product-row');
-    const fila = filas[filaActiva];
-    if (!fila) return;
-    agregarAlCarrito({
-      id: fila.dataset.id,
-      nombre: fila.dataset.nombre,
-      precio: fila.dataset.precio,
-    });
-    // La tabla sigue abierta para seguir agregando
-    setTimeout(() => resaltarFila(filaActiva), 50);
-  }
-
   tablaResultados.innerHTML = productos.map((p, idx) => `
     <tr class="product-row" data-idx="${idx}" data-id="${p.id}" data-nombre="${p.nombre}" data-precio="${p.precio}" style="cursor:pointer;">
       <td><span class="code-badge">${p.codigo_barras || ''}</span></td>
@@ -322,45 +396,23 @@ function mostrarTablaResultados(productos) {
   `).join('');
 
   resultadoBusqueda.style.display = 'block';
+  filaActiva = 0;
   resaltarFila(0);
+  contextoTeclado = 'tabla';
 
-  // Clic en fila o botón +
   document.querySelectorAll('#tablaResultados .product-row').forEach(fila => {
     fila.addEventListener('click', () => {
       resaltarFila(parseInt(fila.dataset.idx));
       agregarFilaActiva();
     });
   });
-
-  // Navegación con teclado — listener temporal activo mientras la tabla está visible
-  function manejarTeclaTabla(e) {
-    if (resultadoBusqueda.style.display === 'none') {
-      document.removeEventListener('keydown', manejarTeclaTabla);
-      return;
-    }
-    const filas = document.querySelectorAll('#tablaResultados .product-row');
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      resaltarFila(Math.min(filaActiva + 1, filas.length - 1));
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      resaltarFila(Math.max(filaActiva - 1, 0));
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
-      agregarFilaActiva();
-    } else if (e.key === 'Escape') {
-      // ESC cierra la tabla — lo maneja el listener global
-      document.removeEventListener('keydown', manejarTeclaTabla);
-    }
-  }
-
-  document.addEventListener('keydown', manejarTeclaTabla);
 }
 
 // ─── MODALES ──────────────────────────────────────────────────────────────────
 
 window.cerrarModal = function(id) {
   document.getElementById(id).style.display = 'none';
+  contextoTeclado = null;
   inputBusqueda.focus();
 };
 
@@ -373,6 +425,7 @@ window.abrirF4 = function() {
   document.getElementById('totalMostrar').textContent = '$ ' + calcularTotal().toFixed(2);
   document.getElementById('montoRecibido').value = '';
   document.getElementById('cambioBox').style.display = 'none';
+  contextoTeclado = null;
   abrirModal('modalEfectivo');
   setTimeout(() => document.getElementById('montoRecibido').focus(), 100);
 };
@@ -421,8 +474,6 @@ window.seleccionarMetodo = function(metodo) {
   );
 };
 
-let metodoActivo = 0;
-
 function resaltarMetodo(idx) {
   const btns = document.querySelectorAll('#modalMetodoPago .btn-metodo');
   btns.forEach((b, i) => b.classList.toggle('activo', i === idx));
@@ -434,39 +485,12 @@ function abrirModalMetodoPago() {
   abrirModal('modalMetodoPago');
   metodoActivo = 0;
   resaltarMetodo(0);
+  contextoTeclado = 'metodo';
 
-  // Clic en cada botón
   document.querySelectorAll('#modalMetodoPago .btn-metodo').forEach((btn, idx) => {
     btn.onclick = () => seleccionarMetodo(btn.dataset.metodo);
     btn.onmouseenter = () => resaltarMetodo(idx);
   });
-
-  function manejarTeclaMetodo(e) {
-    const modal = document.getElementById('modalMetodoPago');
-    if (!modal || modal.style.display === 'none') {
-      document.removeEventListener('keydown', manejarTeclaMetodo);
-      return;
-    }
-    const btns = document.querySelectorAll('#modalMetodoPago .btn-metodo');
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      resaltarMetodo(Math.min(metodoActivo + 1, btns.length - 1));
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      resaltarMetodo(Math.max(metodoActivo - 1, 0));
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
-      const metodo = btns[metodoActivo]?.dataset.metodo;
-      if (metodo) {
-        document.removeEventListener('keydown', manejarTeclaMetodo);
-        seleccionarMetodo(metodo);
-      }
-    } else if (e.key === 'Escape') {
-      document.removeEventListener('keydown', manejarTeclaMetodo);
-    }
-  }
-
-  document.addEventListener('keydown', manejarTeclaMetodo);
 }
 
 function mostrarConfirmacion(titulo, detalle, onConfirmar) {
@@ -474,8 +498,10 @@ function mostrarConfirmacion(titulo, detalle, onConfirmar) {
   document.getElementById('confirmacionDetalle').textContent = detalle;
   document.getElementById('btnConfirmarFinal').onclick = () => {
     cerrarModal('modalConfirmacion');
+    contextoTeclado = null;
     onConfirmar();
   };
+  contextoTeclado = 'confirmacion';
   abrirModal('modalConfirmacion');
 }
 
@@ -503,46 +529,11 @@ async function enviarVenta(metodoPago) {
   }
 }
 
-// ─── ATAJOS DE TECLADO ────────────────────────────────────────────────────────
-
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'F4') { e.preventDefault(); abrirF4(); }
-  if (e.key === 'F2') {
-    e.preventDefault();
-    abrirModalMetodoPago();
-  }
-  if (e.key === 'F3') { e.preventDefault(); vaciarCarrito(); }
-  if (e.key === 'F5') {
-    e.preventDefault();
-    inputBusqueda.focus();
-    inputBusqueda.select();
-  }
-  if (e.key === 'Escape') {
-    e.preventDefault();
-    ['modalEfectivo', 'modalMetodoPago', 'modalConfirmacion'].forEach(id => {
-      document.getElementById(id).style.display = 'none';
-    });
-    cerrarDropdown();
-    resultadoBusqueda.style.display = 'none';
-    inputBusqueda.focus();
-  }
-});
-
-document.addEventListener('keypress', function(e) {
-  if (e.key === 'Enter') {
-    const modalConf = document.getElementById('modalConfirmacion');
-    if (modalConf && modalConf.style.display === 'flex') {
-      e.preventDefault();
-      document.getElementById('btnConfirmarFinal')?.click();
-    }
-  }
-});
-
 // ─── INICIALIZACIÓN ───────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
   initDropdown();
-  renderizarCarrito(); // carrito vacío → oculta columna carrito, expande búsqueda
+  renderizarCarrito();
   columnaBusqueda.classList.add('col-lg-12');
   inputBusqueda.focus();
 });
