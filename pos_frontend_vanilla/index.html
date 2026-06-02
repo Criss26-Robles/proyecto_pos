@@ -135,14 +135,15 @@
   <!-- Modal F2 Metodo de pago -->
   <div id="modalMetodoPago" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center;">
     <div style="background:#1a1a2e; border:1px solid #00ff88; border-radius:12px; padding:32px; width:420px;">
-      <h4 style="color:#00ff88; margin-bottom:24px; text-align:center;">Metodo de Pago</h4>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px;">
-        <button onclick="seleccionarMetodo('Nequi')" class="btn-metodo">Nequi</button>
-        <button onclick="seleccionarMetodo('Davivienda')" class="btn-metodo">Davivienda</button>
-        <button onclick="seleccionarMetodo('Daviplata')" class="btn-metodo">Daviplata</button>
-        <button onclick="seleccionarMetodo('Transferencia')" class="btn-metodo">Transferencia</button>
+      <h4 style="color:#00ff88; margin-bottom:8px; text-align:center;">Metodo de Pago</h4>
+      <p style="color:#555; font-size:12px; text-align:center; margin-bottom:20px;">↑↓ navegar · Enter seleccionar · ESC cancelar</p>
+      <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:24px;">
+        <button class="btn-metodo" data-metodo="Nequi" data-idx="0">Nequi</button>
+        <button class="btn-metodo" data-metodo="Davivienda" data-idx="1">Davivienda</button>
+        <button class="btn-metodo" data-metodo="Daviplata" data-idx="2">Daviplata</button>
+        <button class="btn-metodo" data-metodo="Transferencia" data-idx="3">Transferencia</button>
       </div>
-      <button onclick="cerrarModal('modalMetodoPago')" style="width:100%; padding:12px; background:#333; border:none; border-radius:8px; color:#fff; cursor:pointer; font-size:16px;">Cancelar</button>
+      <button onclick="cerrarModal('modalMetodoPago')" style="width:100%; padding:12px; background:#333; border:none; border-radius:8px; color:#fff; cursor:pointer; font-size:16px;">Cancelar (ESC)</button>
     </div>
   </div>
 
@@ -160,8 +161,9 @@
   </div>
 
   <style>
-    .btn-metodo { padding:16px; background:#0d0d1a; border:1px solid #333; border-radius:8px; color:#fff; cursor:pointer; font-size:16px; transition:all 0.2s; }
-    .btn-metodo:hover { border-color:#00ff88; color:#00ff88; }
+    .btn-metodo { padding:14px 20px; background:#0d0d1a; border:1px solid #333; border-radius:8px; color:#fff; cursor:pointer; font-size:16px; transition:all 0.15s; text-align:left; }
+    .btn-metodo:hover, .btn-metodo.activo { border-color:#00ff88; color:#00ff88; background: rgba(0,255,136,0.08); }
+    .btn-metodo.activo { outline: 2px solid #00ff88; }
     #autocomplete-dropdown .autocomplete-item:hover { background: var(--accent-glow) !important; }
   </style>
 

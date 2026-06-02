@@ -421,6 +421,54 @@ window.seleccionarMetodo = function(metodo) {
   );
 };
 
+let metodoActivo = 0;
+
+function resaltarMetodo(idx) {
+  const btns = document.querySelectorAll('#modalMetodoPago .btn-metodo');
+  btns.forEach((b, i) => b.classList.toggle('activo', i === idx));
+  metodoActivo = idx;
+}
+
+function abrirModalMetodoPago() {
+  if (carrito.length === 0) { mostrarAlerta('El carrito esta vacio', 'error'); return; }
+  abrirModal('modalMetodoPago');
+  metodoActivo = 0;
+  resaltarMetodo(0);
+
+  // Clic en cada botón
+  document.querySelectorAll('#modalMetodoPago .btn-metodo').forEach((btn, idx) => {
+    btn.onclick = () => seleccionarMetodo(btn.dataset.metodo);
+    btn.onmouseenter = () => resaltarMetodo(idx);
+  });
+
+  function manejarTeclaMetodo(e) {
+    const modal = document.getElementById('modalMetodoPago');
+    if (!modal || modal.style.display === 'none') {
+      document.removeEventListener('keydown', manejarTeclaMetodo);
+      return;
+    }
+    const btns = document.querySelectorAll('#modalMetodoPago .btn-metodo');
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      resaltarMetodo(Math.min(metodoActivo + 1, btns.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      resaltarMetodo(Math.max(metodoActivo - 1, 0));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const metodo = btns[metodoActivo]?.dataset.metodo;
+      if (metodo) {
+        document.removeEventListener('keydown', manejarTeclaMetodo);
+        seleccionarMetodo(metodo);
+      }
+    } else if (e.key === 'Escape') {
+      document.removeEventListener('keydown', manejarTeclaMetodo);
+    }
+  }
+
+  document.addEventListener('keydown', manejarTeclaMetodo);
+}
+
 function mostrarConfirmacion(titulo, detalle, onConfirmar) {
   document.getElementById('confirmacionTitulo').textContent = titulo;
   document.getElementById('confirmacionDetalle').textContent = detalle;
@@ -461,8 +509,7 @@ document.addEventListener('keydown', function(e) {
   if (e.key === 'F4') { e.preventDefault(); abrirF4(); }
   if (e.key === 'F2') {
     e.preventDefault();
-    if (carrito.length === 0) { mostrarAlerta('El carrito esta vacio', 'error'); return; }
-    abrirModal('modalMetodoPago');
+    abrirModalMetodoPago();
   }
   if (e.key === 'F3') { e.preventDefault(); vaciarCarrito(); }
   if (e.key === 'F5') {
